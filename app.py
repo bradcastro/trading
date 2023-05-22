@@ -4,7 +4,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 
 def generate_recommendations():
-    recommendations = pd.DataFrame(columns=['Stock', 'Buy Price', 'Sell Price', 'Recommendation'])
+    recommendations = []
 
     stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN',
               'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK',
@@ -24,13 +24,13 @@ def generate_recommendations():
         # Perform your recommendation logic here
         recommendation = 'Buy' if sell_price > buy_price else 'Sell'
 
-        recommendations = recommendations.append({'Stock': stock, 'Buy Price': buy_price,
-                                                  'Sell Price': sell_price, 'Recommendation': recommendation},
-                                                 ignore_index=True)
+        recommendations.append({'Stock': stock, 'Buy Price': buy_price,
+                                'Sell Price': sell_price, 'Recommendation': recommendation})
 
-    recommendations['Stock'] = recommendations['Stock'].apply(lambda x: f"[{x}](https://finance.yahoo.com/quote/{x})")
+    recommendations_df = pd.DataFrame(recommendations)
+    recommendations_df['Stock'] = recommendations_df['Stock'].apply(lambda x: f"[{x}](https://finance.yahoo.com/quote/{x})")
 
-    return recommendations
+    return recommendations_df
 
 
 # Main app code
