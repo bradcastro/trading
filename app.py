@@ -2,25 +2,19 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 
-# List of renewable energy stocks
-renewable_stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB', 'MRMD']  # Add more renewable energy stocks here
+# List of stocks
+stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-st.title('Renewable Energy Stock Recommendations')
+st.title('Stock Recommendations')
 
-# Download historical data for renewable energy stocks
-data = yf.download(renewable_stocks, start='2020-01-01', end='2023-12-31')
+# Download historical data for the stocks
+data = yf.download(stocks, start='2020-01-01', end='2023-12-31')
 
 # Create an empty list to hold the recommendation data
 recommendations = []
 
-# Initialize session state for stock preferences
-if 'stock_preferences' not in st.session_state:
-    st.session_state.stock_preferences = {}
-    for stock in renewable_stocks:
-        st.session_state.stock_preferences[stock] = False
-
 # Perform analysis and generate recommendations
-for stock in renewable_stocks:
+for stock in stocks:
     # Perform your analysis here to generate stock recommendations
     # You can use various metrics and analysis techniques to evaluate the stocks
     
@@ -28,7 +22,7 @@ for stock in renewable_stocks:
     buy_price = data['Close'][stock].iloc[-1]  # Get the latest closing price as the buy price
     sell_price = buy_price * 1.1  # Set the sell price as 10% higher than the buy price
     
-    recommendation = 'Buy' if st.session_state.stock_preferences[stock] else 'Sell'
+    recommendation = 'Buy'
     
     recommendations.append({'Stock': stock, 'Recommendation': recommendation, 'Buy Price': buy_price, 'Sell Price': sell_price})
 
@@ -38,10 +32,3 @@ recommendations_df = pd.DataFrame(recommendations)
 # Display the stock recommendations
 st.subheader('Stock Recommendations')
 st.dataframe(recommendations_df)
-
-# Allow users to customize their preferences
-st.subheader('Customize Preferences')
-
-for stock in renewable_stocks:
-    st.sidebar.markdown(f"**{stock}**")
-    st.sidebar.checkbox('Buy', key=stock, value=st.session_state.stock_preferences[stock], on_change=lambda value, stock=stock: st.session_state.stock_preferences.update({stock: value}))
