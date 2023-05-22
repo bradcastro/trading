@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
-from alpha_vantage.timeseries import TimeSeries
-
-API_KEY = "PUT3TG5YWCXSZU6G"
 
 def generate_recommendations():
     recommendations = pd.DataFrame(columns=['Stock', 'Buy Price', 'Sell Price', 'Recommendation'])
