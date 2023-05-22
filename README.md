@@ -1,0 +1,2 @@
+# trading
+day trading app 
