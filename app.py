@@ -13,13 +13,19 @@ data = yf.download(renewable_stocks, start='2020-01-01', end='2023-12-31')
 # Create an empty DataFrame to hold the recommendation data
 recommendations = pd.DataFrame(columns=['Stock', 'Recommendation'])
 
+# Initialize session state for stock preferences
+if 'stock_preferences' not in st.session_state:
+    st.session_state.stock_preferences = {}
+    for stock in renewable_stocks:
+        st.session_state.stock_preferences[stock] = False
+
 # Perform analysis and generate recommendations
 for stock in renewable_stocks:
     # Perform your analysis here to generate stock recommendations
     # You can use various metrics and analysis techniques to evaluate the stocks
     
     # For demonstration purposes, let's assume a simple random recommendation
-    recommendation = 'Buy' if st.session_state[stock] else 'Sell'
+    recommendation = 'Buy' if st.session_state.stock_preferences[stock] else 'Sell'
     
     recommendations = recommendations.append({'Stock': stock, 'Recommendation': recommendation}, ignore_index=True)
 
@@ -32,4 +38,4 @@ st.subheader('Customize Preferences')
 
 for stock in renewable_stocks:
     st.sidebar.markdown(f"**{stock}**")
-    st.sidebar.checkbox('Buy', key=stock)
+    st.sidebar.checkbox('Buy', key=stock, value=st.session_state.stock_preferences[stock], on_change=lambda value, stock=stock: st.session_state.stock_preferences.update({stock: value}))
