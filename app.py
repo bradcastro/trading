@@ -44,4 +44,5 @@ recommendations = generate_recommendations()
 if recommendations.empty:
     st.info("No recommendations available.")
 else:
-    st.table(recommendations)
+    recommendations = recommendations.set_index('Stock')
+    st.dataframe(recommendations, width=800, height=600)
