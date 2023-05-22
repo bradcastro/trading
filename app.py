@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-import yfinance as yf
+from alpha_vantage.timeseries import TimeSeries
 from datetime import datetime, timedelta
 
 # List of stock tickers
@@ -16,20 +16,22 @@ def generate_recommendations():
     # Create a new DataFrame for recommendations
     new_recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 'Sell Price'])
 
+    # Initialize Alpha Vantage API
+    ts = TimeSeries(key='PUT3TG5YWCXSZU6G', output_format='pandas')
+
     # Loop through each stock ticker
     for stock in tickers:
-        # Get historical data from Yahoo Finance
+        # Get historical data from Alpha Vantage
         try:
-            data = yf.download(stock, start=(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
-                               end=datetime.now().strftime("%Y-%m-%d"))
-            
+            data, _ = ts.get_daily_adjusted(stock, outputsize='full')
+
             if data.empty:
                 continue
 
-            data['Avg Close'] = data['Close'].rolling(window=252).mean()
+            data['Avg Close'] = data['close'].rolling(window=252).mean()
 
             # Get the last closing price
-            current_price = data['Close'].iloc[-1]
+            current_price = data['close'].iloc[-1]
 
             # Get the average closing price for the next trading week
             avg_price_next_week = data['Avg Close'].iloc[-6]
@@ -46,8 +48,8 @@ def generate_recommendations():
 
             # Append the recommendation data to the new DataFrame
             new_recommendations = new_recommendations.append({'Stock': stock, 'Recommendation': recommendation,
-                                                      'Buy Price': buy_price, 'Sell Price': sell_price},
-                                                     ignore_index=True)
+                                                              'Buy Price': buy_price, 'Sell Price': sell_price},
+                                                             ignore_index=True)
         except Exception as e:
             print(f"Error retrieving data for {stock}: {str(e)}")
 
@@ -55,7 +57,7 @@ def generate_recommendations():
     new_recommendations['Stock'] = new_recommendations['Stock'].astype(str)  # Convert to string type
     new_recommendations.sort_values('Stock', inplace=True)
     new_recommendations.reset_index(drop=True, inplace=True)
-    
+
     return new_recommendations
 
 # Generate initial recommendations
@@ -66,7 +68,3 @@ st.title("Bagwell's Big Bag - Stock Recommendations")
 
 # Display the recommendations
 st.table(recommendations)
-
-# Refresh the recommendations every day
-if datetime.now().strftime("%H:%M:%S") == "00:00:00":
-    recommendations = generate_recommendations()
