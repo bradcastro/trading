@@ -1,70 +1,46 @@
-import pandas as pd
 import streamlit as st
-from alpha_vantage.timeseries import TimeSeries
+import pandas as pd
+import yfinance as yf
 from datetime import datetime, timedelta
+from alpha_vantage.timeseries import TimeSeries
 
-# List of stock tickers
-tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN',
-           'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK',
-           'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
+API_KEY = "PUT3TG5YWCXSZU6G"
 
-# Create an empty DataFrame to hold all the recommendation data
-recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 'Sell Price'])
-
-# Function to generate recommendations
 def generate_recommendations():
-    # Create a new DataFrame for recommendations
-    new_recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 'Sell Price'])
+    recommendations = pd.DataFrame(columns=['Stock', 'Buy Price', 'Sell Price', 'Recommendation'])
 
-    # Initialize Alpha Vantage API
-    ts = TimeSeries(key='PUT3TG5YWCXSZU6G', output_format='pandas')
+    stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN',
+              'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK',
+              'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-    # Loop through each stock ticker
-    for stock in tickers:
-        # Get historical data from Alpha Vantage
-        try:
-            data, _ = ts.get_daily_adjusted(stock, outputsize='full')
+    for stock in stocks:
+        data = yf.download(stock, start=(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+                           end=datetime.now().strftime("%Y-%m-%d"), progress=False)
 
-            if data.empty:
-                continue
+        if data.empty:
+            continue
 
-            data['Avg Close'] = data['close'].rolling(window=252).mean()
+        # Calculate buy and sell prices based on the previous day's close price
+        buy_price = data['Close'].iloc[-2]
+        sell_price = data['Close'].iloc[-1]
 
-            # Get the last closing price
-            current_price = data['close'].iloc[-1]
+        # Perform your recommendation logic here
+        recommendation = 'Buy' if sell_price > buy_price else 'Sell'
 
-            # Get the average closing price for the next trading week
-            avg_price_next_week = data['Avg Close'].iloc[-6]
+        recommendations = recommendations.append({'Stock': stock, 'Buy Price': buy_price,
+                                                  'Sell Price': sell_price, 'Recommendation': recommendation},
+                                                 ignore_index=True)
 
-            # Determine the recommendation based on the price comparison
-            if current_price < avg_price_next_week:
-                recommendation = 'Buy'
-                buy_price = current_price
-                sell_price = avg_price_next_week
-            else:
-                recommendation = 'Sell'
-                buy_price = avg_price_next_week
-                sell_price = current_price
+    recommendations['Stock'] = recommendations['Stock'].apply(lambda x: f"[{x}](https://finance.yahoo.com/quote/{x})")
 
-            # Append the recommendation data to the new DataFrame
-            new_recommendations = new_recommendations.append({'Stock': stock, 'Recommendation': recommendation,
-                                                              'Buy Price': buy_price, 'Sell Price': sell_price},
-                                                             ignore_index=True)
-        except Exception as e:
-            print(f"Error retrieving data for {stock}: {str(e)}")
+    return recommendations
 
-    # Sort the recommendations by stock ticker
-    new_recommendations['Stock'] = new_recommendations['Stock'].astype(str)  # Convert to string type
-    new_recommendations.sort_values('Stock', inplace=True)
-    new_recommendations.reset_index(drop=True, inplace=True)
 
-    return new_recommendations
-
-# Generate initial recommendations
+# Main app code
+st.title("Bagwells Big Bag Recommendations")
 recommendations = generate_recommendations()
 
-# Streamlit app
-st.title("Bagwell's Big Bag - Stock Recommendations")
-
-# Display the recommendations
-st.table(recommendations)
+if recommendations.empty:
+    st.info("No recommendations available.")
+else:
+    st.table(recommendations)
