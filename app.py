@@ -1,7 +1,10 @@
-import yfinance as yf
 import pandas as pd
 import streamlit as st
-import datetime
+from alpha_vantage.timeseries import TimeSeries
+from datetime import datetime, timedelta
+
+# Alpha Vantage API key
+api_key = 'YOUR_API_KEY'
 
 # List of stock tickers
 tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN',
@@ -15,18 +18,20 @@ recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 
 def generate_recommendations():
     # Loop through each stock ticker
     for stock in tickers:
-        # Download historical data for the stock
-        data = yf.download(stock, start=(datetime.datetime.now() - datetime.timedelta(days=365)).strftime("%Y-%m-%d"),
-                           end=datetime.datetime.now().strftime("%Y-%m-%d"))
+        # Get historical data from Alpha Vantage
+        ts = TimeSeries(key=api_key, output_format='pandas')
+        data, _ = ts.get_daily(symbol=stock, outputsize='full')
+        data['date'] = pd.to_datetime(data.index)
+        data.sort_values('date', ascending=False, inplace=True)
 
         # Calculate the average closing price over the past 252 trading days
-        data['Avg Close'] = data['Close'].rolling(window=252).mean()
+        data['Avg Close'] = data['4. close'].rolling(window=252).mean()
 
         # Get the last closing price
-        current_price = data['Close'].iloc[-1]
+        current_price = data['4. close'].iloc[0]
 
         # Get the average closing price for the next trading week
-        avg_price_next_week = data['Avg Close'].iloc[-1]
+        avg_price_next_week = data['Avg Close'].iloc[6]
 
         # Determine the recommendation based on the price comparison
         if current_price < avg_price_next_week:
@@ -55,5 +60,5 @@ st.title("Bagwell's Big Bag - Stock Recommendations")
 st.table(recommendations)
 
 # Refresh the recommendations every day
-if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:00":
+if datetime.now().strftime("%H:%M:%S") == "00:00:00":
     generate_recommendations()
