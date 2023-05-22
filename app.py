@@ -1,62 +1,59 @@
-import streamlit as st
-import pandas as pd
 import yfinance as yf
-from datetime import datetime, timedelta
+import pandas as pd
+import streamlit as st
+import datetime
 
 # List of stock tickers
-tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
+tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN',
+           'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK',
+           'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-# Function to generate future recommendations for the next week
+# Create an empty DataFrame to hold all the recommendation data
+recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 'Sell Price'])
+
+# Function to generate recommendations
 def generate_recommendations():
-    recommendations = []
-
-    # Get the current date
-    current_date = datetime.now()
-
-    # Calculate the end date as one week from the current date
-    end_date = current_date + timedelta(days=7)
-
-    # Iterate through each stock ticker
+    # Loop through each stock ticker
     for stock in tickers:
-        try:
-            # Download historical data for the stock
-            data = yf.download(stock, start=current_date, end=end_date, progress=False)
-            
-            if data.empty:
-                continue
-            
-            # Calculate the purchase price as the closing price of the current day
-            purchase_price = data['Close'][current_date.strftime('%Y-%m-%d')]
+        # Download historical data for the stock
+        data = yf.download(stock, start=(datetime.datetime.now() - datetime.timedelta(days=365)).strftime("%Y-%m-%d"),
+                           end=datetime.datetime.now().strftime("%Y-%m-%d"))
 
-            # Calculate the sell price as the mean of the high and low prices of the current day
-            sell_price = (data['High'][current_date.strftime('%Y-%m-%d')] + data['Low'][current_date.strftime('%Y-%m-%d')]) / 2
+        # Calculate the average closing price over the past 252 trading days
+        data['Avg Close'] = data['Close'].rolling(window=252).mean()
 
-            # Determine the recommendation based on the purchase and sell prices
-            if sell_price > purchase_price:
-                recommendation = 'Buy'
-            else:
-                recommendation = 'Sell'
+        # Get the last closing price
+        current_price = data['Close'].iloc[-1]
 
-            recommendations.append({'Stock': stock, 'Recommendation': recommendation, 'Purchase Price': purchase_price, 'Sell Price': sell_price})
-        except Exception as e:
-            print(f"Failed to generate recommendation for {stock}: {e}")
+        # Get the average closing price for the next trading week
+        avg_price_next_week = data['Avg Close'].iloc[-1]
 
-    return recommendations
+        # Determine the recommendation based on the price comparison
+        if current_price < avg_price_next_week:
+            recommendation = 'Buy'
+            buy_price = current_price
+            sell_price = avg_price_next_week
+        else:
+            recommendation = 'Sell'
+            buy_price = avg_price_next_week
+            sell_price = current_price
 
-# Generate recommendations
-recommendations = generate_recommendations()
+        # Append the recommendation data to the DataFrame
+        recommendations.loc[recommendations['Stock'] == stock] = [stock, recommendation, buy_price, sell_price]
 
-# Display recommendations in Streamlit app
-st.set_page_config(layout="wide")
-st.header("Bagwells Big Bag - Stock Recommendations for the Next Week")
+    # Sort the recommendations by stock ticker
+    recommendations.sort_values('Stock', inplace=True)
+    recommendations.reset_index(drop=True, inplace=True)
 
-if recommendations:
-    df = pd.DataFrame(recommendations)
-    
-    # Format the dataframe to include hyperlinks
-    df['Stock'] = df['Stock'].apply(lambda x: f"[{x}](https://finance.yahoo.com/quote/{x})")
-    
-    # Display the dataframe
-    st.dataframe(df.style.format({'Purchase Price': '{:.2f}', 'Sell Price': '{:.2f}'}), height=800)
-else:
-    st.write("No recommendations available")
+# Generate initial recommendations
+generate_recommendations()
+
+# Streamlit app
+st.title("Bagwell's Big Bag - Stock Recommendations")
+
+# Display the recommendations
+st.table(recommendations)
+
+# Refresh the recommendations every day
+if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:00":
+    generate_recommendations()
