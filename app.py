@@ -4,15 +4,18 @@ import pandas as pd
 
 # Function to download historical stock data
 def download_historical_data(tickers, start_date, end_date):
-    all_data = pd.DataFrame()
+    all_data = []
 
     for ticker in tickers:
         try:
             data = yf.download(ticker, start=start_date, end=end_date)
             data['Ticker'] = ticker
-            all_data = all_data.append(data)
+            all_data.append(data)
         except Exception as e:
             st.write(f"Failed to download data for {ticker}: {e}")
+
+    if all_data:
+        all_data = pd.concat(all_data)
 
     return all_data
 
