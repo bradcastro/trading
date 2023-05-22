@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
 from datetime import datetime, timedelta
 
 def generate_recommendations():
@@ -11,10 +12,21 @@ def generate_recommendations():
 
     for stock in stocks:
         try:
-            # Perform your recommendation logic here
-            recommendation = 'Buy'  # Placeholder for recommendation
+            data = yf.download(stock, start=(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+                               end=datetime.now().strftime("%Y-%m-%d"), progress=False)
 
-            recommendations.append({'Stock': stock, 'Recommendation': recommendation})
+            if data.empty:
+                continue
+
+            # Calculate buy and sell prices based on the previous day's close price
+            buy_price = data['Close'].iloc[-2]
+            sell_price = data['Close'].iloc[-1]
+
+            # Perform your recommendation logic here
+            recommendation = 'Buy' if sell_price > buy_price else 'Sell'
+
+            recommendations.append({'Stock': stock, 'Buy Price': buy_price,
+                                    'Sell Price': sell_price, 'Recommendation': recommendation})
         except Exception as e:
             print(f"Error occurred for stock {stock}: {str(e)}")
 
@@ -33,4 +45,4 @@ if recommendations.empty:
     st.info("No recommendations available.")
 else:
     recommendations = recommendations.set_index('Stock')
-    st.table(recommendations)
+    st.dataframe(recommendations, width=800, height=600)
