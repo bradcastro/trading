@@ -13,6 +13,9 @@ recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 
 
 # Function to generate recommendations
 def generate_recommendations():
+    # Create a new DataFrame for recommendations
+    new_recommendations = pd.DataFrame(columns=['Stock', 'Recommendation', 'Buy Price', 'Sell Price'])
+
     # Loop through each stock ticker
     for stock in tickers:
         # Get historical data from Yahoo Finance
@@ -41,20 +44,22 @@ def generate_recommendations():
                 buy_price = avg_price_next_week
                 sell_price = current_price
 
-            # Append the recommendation data to the DataFrame
-            recommendations = recommendations.append({'Stock': stock, 'Recommendation': recommendation,
+            # Append the recommendation data to the new DataFrame
+            new_recommendations = new_recommendations.append({'Stock': stock, 'Recommendation': recommendation,
                                                       'Buy Price': buy_price, 'Sell Price': sell_price},
                                                      ignore_index=True)
         except Exception as e:
             print(f"Error retrieving data for {stock}: {str(e)}")
 
     # Sort the recommendations by stock ticker
-    recommendations['Stock'] = recommendations['Stock'].astype(str)  # Convert to string type
-    recommendations.sort_values('Stock', inplace=True)
-    recommendations.reset_index(drop=True, inplace=True)
+    new_recommendations['Stock'] = new_recommendations['Stock'].astype(str)  # Convert to string type
+    new_recommendations.sort_values('Stock', inplace=True)
+    new_recommendations.reset_index(drop=True, inplace=True)
+    
+    return new_recommendations
 
 # Generate initial recommendations
-generate_recommendations()
+recommendations = generate_recommendations()
 
 # Streamlit app
 st.title("Bagwell's Big Bag - Stock Recommendations")
@@ -64,4 +69,4 @@ st.table(recommendations)
 
 # Refresh the recommendations every day
 if datetime.now().strftime("%H:%M:%S") == "00:00:00":
-    generate_recommendations()
+    recommendations = generate_recommendations()
