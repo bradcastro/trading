@@ -6,7 +6,7 @@ import datetime
 # List of stocks
 stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-st.title('Stock Recommendations')
+st.title('Bagwells Big Bag')
 
 # Download historical data for the stocks
 data = yf.download(stocks, start=datetime.datetime.now() - datetime.timedelta(hours=24), end=datetime.datetime.now())
@@ -31,5 +31,5 @@ for stock in stocks:
 recommendations_df = pd.DataFrame(recommendations)
 
 # Display the stock recommendations
-st.subheader('Stock Recommendations (Last 24 Hours)')
+st.subheader('Bagwells Big Bag (Next 24 Hours)')
 st.dataframe(recommendations_df)
