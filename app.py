@@ -10,8 +10,8 @@ st.title('Renewable Energy Stock Recommendations')
 # Download historical data for renewable energy stocks
 data = yf.download(renewable_stocks, start='2020-01-01', end='2023-12-31')
 
-# Create an empty DataFrame to hold the recommendation data
-recommendations = pd.DataFrame(columns=['Stock', 'Recommendation'])
+# Create an empty list to hold the recommendation data
+recommendations = []
 
 # Initialize session state for stock preferences
 if 'stock_preferences' not in st.session_state:
@@ -27,11 +27,14 @@ for stock in renewable_stocks:
     # For demonstration purposes, let's assume a simple random recommendation
     recommendation = 'Buy' if st.session_state.stock_preferences[stock] else 'Sell'
     
-    recommendations = recommendations.append({'Stock': stock, 'Recommendation': recommendation}, ignore_index=True)
+    recommendations.append({'Stock': stock, 'Recommendation': recommendation})
+
+# Convert the recommendations list to a DataFrame
+recommendations_df = pd.DataFrame(recommendations)
 
 # Display the stock recommendations
 st.subheader('Stock Recommendations')
-st.dataframe(recommendations)
+st.dataframe(recommendations_df)
 
 # Allow users to customize their preferences
 st.subheader('Customize Preferences')
