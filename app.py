@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
+import datetime
 
 # List of stocks
 stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
@@ -8,7 +9,7 @@ stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBT
 st.title('Stock Recommendations')
 
 # Download historical data for the stocks
-data = yf.download(stocks, start='2020-01-01', end='2023-12-31')
+data = yf.download(stocks, start=datetime.datetime.now() - datetime.timedelta(hours=24), end=datetime.datetime.now())
 
 # Create an empty list to hold the recommendation data
 recommendations = []
@@ -30,5 +31,5 @@ for stock in stocks:
 recommendations_df = pd.DataFrame(recommendations)
 
 # Display the stock recommendations
-st.subheader('Stock Recommendations')
+st.subheader('Stock Recommendations (Last 24 Hours)')
 st.dataframe(recommendations_df)
