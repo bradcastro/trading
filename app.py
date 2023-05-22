@@ -25,9 +25,12 @@ for stock in renewable_stocks:
     # You can use various metrics and analysis techniques to evaluate the stocks
     
     # For demonstration purposes, let's assume a simple random recommendation
+    buy_price = data['Close'][stock].iloc[-1]  # Get the latest closing price as the buy price
+    sell_price = buy_price * 1.1  # Set the sell price as 10% higher than the buy price
+    
     recommendation = 'Buy' if st.session_state.stock_preferences[stock] else 'Sell'
     
-    recommendations.append({'Stock': stock, 'Recommendation': recommendation})
+    recommendations.append({'Stock': stock, 'Recommendation': recommendation, 'Buy Price': buy_price, 'Sell Price': sell_price})
 
 # Convert the recommendations list to a DataFrame
 recommendations_df = pd.DataFrame(recommendations)
