@@ -49,6 +49,7 @@ def generate_recommendations():
             print(f"Error retrieving data for {stock}: {str(e)}")
 
     # Sort the recommendations by stock ticker
+    recommendations['Stock'] = recommendations['Stock'].astype(str)  # Convert to string type
     recommendations.sort_values('Stock', inplace=True)
     recommendations.reset_index(drop=True, inplace=True)
 
