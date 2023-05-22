@@ -1,0 +1,13 @@
+# List of stock tickers
+tickers = [
+    # List of tickers from previous sections...
+]
+
+# Remove duplicates and sort the list
+tickers = sorted(list(set(tickers)))
+
+# Write the tickers to a file
+with open("stock_tickers.txt", "w") as file:
+    file.write("\n".join(tickers))
+
+print("Stock tickers have been written to stock_tickers.txt file.")
