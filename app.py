@@ -1,35 +1,50 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
-import datetime
+import pandas as pd
+from datetime import datetime, timedelta
 
-# List of stocks
-stocks = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
+# List of stock tickers
+tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-st.title('Bagwells Big Bag')
+# Function to generate future recommendations
+def generate_recommendations():
+    recommendations = []
 
-# Download historical data for the stocks
-data = yf.download(stocks, start=datetime.datetime.now() - datetime.timedelta(hours=24), end=datetime.datetime.now())
+    # Iterate through each stock ticker
+    for stock in tickers:
+        try:
+            # Download historical data for the current stock
+            data = yf.download(stock, start=datetime.now() - timedelta(days=365), end=datetime.now(), progress=False)
 
-# Create an empty list to hold the recommendation data
-recommendations = []
+            # Train your prediction model using the historical data
 
-# Perform analysis and generate recommendations
-for stock in stocks:
-    # Perform your analysis here to generate stock recommendations
-    # You can use various metrics and analysis techniques to evaluate the stocks
-    
-    # For demonstration purposes, let's assume a simple random recommendation
-    buy_price = data['Close'][stock].iloc[-1]  # Get the latest closing price as the buy price
-    sell_price = buy_price * 1.1  # Set the sell price as 10% higher than the buy price
-    
-    recommendation = 'Buy'
-    
-    recommendations.append({'Stock': stock, 'Recommendation': recommendation, 'Buy Price': buy_price, 'Sell Price': sell_price})
+            # Make future price predictions for the next 24 hours
 
-# Convert the recommendations list to a DataFrame
-recommendations_df = pd.DataFrame(recommendations)
+            # Determine buy and sell thresholds based on the predicted prices
 
-# Display the stock recommendations
-st.subheader('Bagwells Big Bag (Next 24 Hours)')
-st.dataframe(recommendations_df)
+            # Get the latest price for the stock
+            latest_price = data['Close'].iloc[-1]
+
+            # Generate buy or sell recommendation based on the thresholds
+            recommendation = 'Buy' if latest_price < buy_threshold else 'Sell'
+
+            # Append the recommendation to the list
+            recommendations.append({'Stock': stock, 'Recommendation': recommendation})
+
+        except Exception as e:
+            print(f"Failed to generate recommendation for {stock}: {e}")
+
+    return recommendations
+
+# Generate recommendations
+recommendations = generate_recommendations()
+
+# Display recommendations in Streamlit app
+st.header("Bagwells Big Bag - Stock Recommendations for the Next 24 Hours")
+
+if recommendations:
+    df = pd.DataFrame(recommendations)
+    st.dataframe(df)
+else:
+    st.write("No recommendations available")
+
