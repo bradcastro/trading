@@ -1,38 +1,35 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
+import yfinance as yf
 
 # List of stock tickers
 tickers = ['RES', 'SCHW', 'SLB', 'SPR', 'STRL', 'SWBI', 'THO', 'TPR', 'NOV', 'OBTC', 'OII', 'OIS', 'ONEW', 'ORN', 'POWL', 'PVH', 'FLR', 'FOSL', 'GBX', 'HOOD', 'JWN', 'KBAL', 'MOV', 'MRMD', 'MTRX', 'BKE', 'CLB', 'CNK', 'CRWD', 'DECK', 'DNOW', 'DRQ', 'FLR']
 
-# Function to generate future recommendations
+# Function to generate future recommendations based on trailing 7-day performance
 def generate_recommendations():
     recommendations = []
 
     # Iterate through each stock ticker
     for stock in tickers:
-        try:
-            # Download historical data for the current stock
-            data = yf.download(stock, start=datetime.now() - timedelta(days=365), end=datetime.now(), progress=False)
+        # Download historical data for the stock
+        data = yf.download(stock, period='7d', interval='1d', progress=False)
+        
+        if data.empty:
+            continue
+        
+        # Calculate the purchase price as the closing price of the last trading day
+        purchase_price = data['Close'][-1]
 
-            # Train your prediction model using the historical data
+        # Calculate the sell price as the mean of the high and low prices of the last trading day
+        sell_price = (data['High'][-1] + data['Low'][-1]) / 2
 
-            # Make future price predictions for the next 24 hours
+        # Determine the recommendation based on the purchase and sell prices
+        if sell_price > purchase_price:
+            recommendation = 'Buy'
+        else:
+            recommendation = 'Sell'
 
-            # Determine buy and sell thresholds based on the predicted prices
-
-            # Get the latest price for the stock
-            latest_price = data['Close'].iloc[-1]
-
-            # Generate buy or sell recommendation based on the thresholds
-            recommendation = 'Buy' if latest_price < buy_threshold else 'Sell'
-
-            # Append the recommendation to the list
-            recommendations.append({'Stock': stock, 'Recommendation': recommendation})
-
-        except Exception as e:
-            print(f"Failed to generate recommendation for {stock}: {e}")
+        recommendations.append({'Stock': stock, 'Recommendation': recommendation, 'Purchase Price': purchase_price, 'Sell Price': sell_price})
 
     return recommendations
 
@@ -40,11 +37,11 @@ def generate_recommendations():
 recommendations = generate_recommendations()
 
 # Display recommendations in Streamlit app
-st.header("Bagwells Big Bag - Stock Recommendations for the Next 24 Hours")
+st.set_page_config(layout="wide")
+st.header("Bagwells Big Bag - Stock Recommendations for the Next Trading Day")
 
 if recommendations:
     df = pd.DataFrame(recommendations)
-    st.dataframe(df)
+    st.dataframe(df.style.format({'Purchase Price': '{:.2f}', 'Sell Price': '{:.2f}'}), height=800)
 else:
     st.write("No recommendations available")
-
