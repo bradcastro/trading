@@ -3,7 +3,7 @@ import pandas as pd
 import yfinance as yf
 
 # List of renewable energy stocks
-renewable_stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB']  # Add more renewable energy stocks here
+renewable_stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB', 'MRMD']  # Add more renewable energy stocks here
 
 st.title('Renewable Energy Stock Recommendations')
 
