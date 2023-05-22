@@ -40,4 +40,5 @@ recommendations = generate_recommendations()
 if recommendations.empty:
     st.info("No recommendations available.")
 else:
+    recommendations['Stock'] = recommendations['Stock'].apply(lambda x: f"[{x}](https://finance.yahoo.com/quote/{x})")
     st.table(recommendations)
