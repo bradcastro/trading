@@ -16,28 +16,37 @@ def generate_recommendations():
     # Loop through each stock ticker
     for stock in tickers:
         # Get historical data from Yahoo Finance
-        data = yf.download(stock, start=(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
-                           end=datetime.now().strftime("%Y-%m-%d"))
-        data['Avg Close'] = data['Close'].rolling(window=252).mean()
+        try:
+            data = yf.download(stock, start=(datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+                               end=datetime.now().strftime("%Y-%m-%d"))
+            
+            if data.empty:
+                continue
 
-        # Get the last closing price
-        current_price = data['Close'].iloc[-1]
+            data['Avg Close'] = data['Close'].rolling(window=252).mean()
 
-        # Get the average closing price for the next trading week
-        avg_price_next_week = data['Avg Close'].iloc[-6]
+            # Get the last closing price
+            current_price = data['Close'].iloc[-1]
 
-        # Determine the recommendation based on the price comparison
-        if current_price < avg_price_next_week:
-            recommendation = 'Buy'
-            buy_price = current_price
-            sell_price = avg_price_next_week
-        else:
-            recommendation = 'Sell'
-            buy_price = avg_price_next_week
-            sell_price = current_price
+            # Get the average closing price for the next trading week
+            avg_price_next_week = data['Avg Close'].iloc[-6]
 
-        # Append the recommendation data to the DataFrame
-        recommendations.loc[recommendations['Stock'] == stock] = [stock, recommendation, buy_price, sell_price]
+            # Determine the recommendation based on the price comparison
+            if current_price < avg_price_next_week:
+                recommendation = 'Buy'
+                buy_price = current_price
+                sell_price = avg_price_next_week
+            else:
+                recommendation = 'Sell'
+                buy_price = avg_price_next_week
+                sell_price = current_price
+
+            # Append the recommendation data to the DataFrame
+            recommendations = recommendations.append({'Stock': stock, 'Recommendation': recommendation,
+                                                      'Buy Price': buy_price, 'Sell Price': sell_price},
+                                                     ignore_index=True)
+        except Exception as e:
+            print(f"Error retrieving data for {stock}: {str(e)}")
 
     # Sort the recommendations by stock ticker
     recommendations.sort_values('Stock', inplace=True)
